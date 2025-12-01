@@ -1,7 +1,8 @@
 #!/bin/bash
-# =========================================================
-#  CREALIB FORMAT v1.0 - by Charlie Martinez®
-# =========================================================
+# CREALIB FORMAT Ver. 1.0
+# Autor: Charlie Martínez <cmartinez@crealib.net>
+# Licencia: GPLv2 https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
+# Detecta discos HDD conectados vía USB y permite formatearlos a bajo nivel
 
 # ---------- DETECCIÓN DE IDIOMA ----------
 
@@ -28,7 +29,7 @@ else
   MSG_DEP_TITLE="Required dependency"
   MSG_DEP_TEXT="The following dependency is required:\n\n  dialog\n\nDo you want to install it now?"
   MSG_NO_DEP="The program cannot run without the dialog dependency."
-  MSG_NO_NET="No internet connection.\nThe required dependency cannot be installed."
+  MSG_NO_NET="No internet connection.\nCannot install required dependency."
   MSG_NO_USB="No USB connected HDD detected."
   MSG_MENU_TITLE="CREALIB FORMAT v1.0"
   MSG_MENU_TEXT="Select the USB HDD to format:"
@@ -63,12 +64,12 @@ install_dialog() {
 if ! command -v dialog &>/dev/null; then
 
   if ! check_internet; then
-    dialog --msgbox "$MSG_NO_NET" 8 60
-    clear
+    echo -e "$MSG_NO_NET"
     exit 1
   fi
 
   dialog --title "$MSG_DEP_TITLE" \
+         --backtitle "CREALIB FORMAT v1.0" \
          --yesno "$MSG_DEP_TEXT" 10 55
 
   RESP=$?
@@ -83,18 +84,21 @@ if ! command -v dialog &>/dev/null; then
   install_dialog
 
   if ! command -v dialog &>/dev/null; then
-    dialog --msgbox "ERROR: dialog installation failed." 8 60
-    clear
+    echo "ERROR: dialog installation failed."
     exit 1
   fi
 fi
 
-# ---------- DETECCIÓN DE DISCOS USB ----------
+# ---------- DETECCIÓN DE DISCOS USB REALES (tamaño > 0) ----------
 
-mapfile -t DISKS < <(lsblk -ndo NAME,TRAN,TYPE,SIZE | awk '$2=="usb" && $3=="disk" {print "/dev/"$1" "$4}')
+mapfile -t DISKS < <(
+  lsblk -ndo NAME,TRAN,TYPE,SIZE | \
+  awk '$2=="usb" && $3=="disk" && $4 != "0B" {print "/dev/"$1" "$4}'
+)
 
 if [[ ${#DISKS[@]} -eq 0 ]]; then
-  dialog --msgbox "$MSG_NO_USB" 7 60
+  dialog --backtitle "CREALIB FORMAT v1.0" \
+         --msgbox "$MSG_NO_USB" 7 60
   clear
   exit 1
 fi
@@ -105,15 +109,17 @@ MENU_ITEMS=()
 for DISK in "${DISKS[@]}"; do
   DEV=$(echo "$DISK" | awk '{print $1}')
   SIZE=$(echo "$DISK" | awk '{print $2}')
-  MODEL=$(udevadm info --query=property --name="$DEV" | grep ID_MODEL= | cut -d= -f2)
-  MENU_ITEMS+=("$DEV" "$SIZE - $MODEL")
+  MODEL=$(udevadm info --query=property --name="$DEV" | grep -E '^ID_MODEL=' | cut -d= -f2)
+  MENU_ITEMS+=("$DEV" "$SIZE${MODEL:+ — $MODEL}")
 done
 
 DISK_SELECTED=$(dialog \
+  --backtitle "CREALIB FORMAT v1.0" \
   --title "$MSG_MENU_TITLE" \
-  --menu "$MSG_MENU_TEXT" 15 70 6 \
+  --menu "$MSG_MENU_TEXT" 16 70 8 \
   "${MENU_ITEMS[@]}" \
-  3>&1 1>&2 2>&3)
+  3>&1 1>&2 2>&3
+)
 
 clear
 [[ -z "$DISK_SELECTED" ]] && exit 0
@@ -122,7 +128,8 @@ clear
 
 CONFIRM_MSG=$(printf "$MSG_CONFIRM" "$DISK_SELECTED")
 
-dialog --yesno "$CONFIRM_MSG" 12 70
+dialog --backtitle "CREALIB FORMAT v1.0" \
+       --yesno "$CONFIRM_MSG" 12 70
 RESP=$?
 
 clear
@@ -132,10 +139,13 @@ clear
 
 (
   sudo dd if=/dev/zero of="$DISK_SELECTED" bs=4M status=progress conv=fsync
-) | dialog --title "$MSG_WORKING" --programbox 16 85
+) | dialog --backtitle "CREALIB FORMAT v1.0" \
+           --title "$MSG_WORKING" \
+           --programbox 16 85
 
 sync
 
 DONE_MSG=$(printf "$MSG_DONE" "$DISK_SELECTED")
-dialog --msgbox "$DONE_MSG" 8 55
+dialog --backtitle "CREALIB FORMAT v1.0" \
+       --msgbox "$DONE_MSG" 8 55
 clear
