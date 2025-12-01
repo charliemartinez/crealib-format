@@ -31,12 +31,14 @@ else
   MSG_NO_DEP="The program cannot run without the dialog dependency."
   MSG_NO_NET="No internet connection.\nCannot install required dependency."
   MSG_NO_USB="No USB connected HDD detected."
-  MSG_MENU_TITLE="CREALIB FORMAT v1.0"
+  MSG_MENU_TITLE="CREALIB FORMAT"
   MSG_MENU_TEXT="Select the USB HDD to format:"
   MSG_CONFIRM="DO YOU CONFIRM TOTAL ERASE OF:\n\n%s\n\nTHIS ACTION IS IRREVERSIBLE?"
   MSG_WORKING="Formatting..."
   MSG_DONE="FULL ERASE COMPLETED:\n\n%s"
 fi
+
+MSG_BACK_TITLE="CREALIB FORMAT v1.0 - By Charlie Martinez®, GPLv"
 
 # ---------- FUNCIONES ----------
 
@@ -69,7 +71,7 @@ if ! command -v dialog &>/dev/null; then
   fi
 
   dialog --title "$MSG_DEP_TITLE" \
-         --backtitle "CREALIB FORMAT v1.0 - By Charlie Martinez®, GPLv" \
+         --backtitle "$MSG_BACK_TITLE" \
          --yesno "$MSG_DEP_TEXT" 10 55
 
   RESP=$?
@@ -114,7 +116,7 @@ for DISK in "${DISKS[@]}"; do
 done
 
 DISK_SELECTED=$(dialog \
-  --backtitle "CREALIB FORMAT v1.0" \
+  --backtitle "$MSG_BACK_TITLE" \
   --title "$MSG_MENU_TITLE" \
   --menu "$MSG_MENU_TEXT" 16 70 8 \
   "${MENU_ITEMS[@]}" \
@@ -128,7 +130,7 @@ clear
 
 CONFIRM_MSG=$(printf "$MSG_CONFIRM" "$DISK_SELECTED")
 
-dialog --backtitle "CREALIB FORMAT v1.0" \
+dialog --backtitle "$MSG_BACK_TITLE" \
        --yesno "$CONFIRM_MSG" 12 70
 RESP=$?
 
@@ -139,13 +141,13 @@ clear
 
 (
   sudo dd if=/dev/zero of="$DISK_SELECTED" bs=4M status=progress conv=fsync
-) | dialog --backtitle "CREALIB FORMAT v1.0" \
+) | dialog --backtitle "$MSG_BACK_TITLE" \
            --title "$MSG_WORKING" \
            --programbox 16 85
 
 sync
 
 DONE_MSG=$(printf "$MSG_DONE" "$DISK_SELECTED")
-dialog --backtitle "CREALIB FORMAT v1.0" \
+dialog --backtitle "$MSG_BACK_TITLE" \
        --msgbox "$DONE_MSG" 8 55
 clear
