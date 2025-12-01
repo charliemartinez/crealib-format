@@ -90,7 +90,7 @@ Thanks to the **HACKLAB ESCARNIO (Santiago de Compostela, Galicia)** for promoti
 
 ## 📘 Información ampliada / More Information
 
-https://www.quirinux.org/
+Proximamente.
 
 ---
 
