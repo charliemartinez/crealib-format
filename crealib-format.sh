@@ -20,7 +20,7 @@ if [[ "$LANGMODE" == "ES" ]]; then
   MSG_NO_DEP="No se puede ejecutar el programa sin la dependencia dialog."
   MSG_NO_NET="No hay conexión a internet.\nNo se puede instalar la dependencia requerida."
   MSG_NO_USB="No se detectaron discos HDD conectados por USB."
-  MSG_MENU_TITLE="CREALIB FORMAT v1.0 - By Charlie Martinez®, GPLv2"
+  MSG_MENU_TITLE="CREALIB FORMAT"
   MSG_MENU_TEXT="Seleccione el HDD USB a formatear:"
   MSG_CONFIRM="¿CONFIRMAS el BORRADO TOTAL de:\n\n%s\n\nESTA ACCIÓN ES IRREVERSIBLE?"
   MSG_WORKING="Formateando..."
@@ -69,7 +69,7 @@ if ! command -v dialog &>/dev/null; then
   fi
 
   dialog --title "$MSG_DEP_TITLE" \
-         --backtitle "CREALIB FORMAT v1.0" \
+         --backtitle "CREALIB FORMAT v1.0 - By Charlie Martinez®, GPLv" \
          --yesno "$MSG_DEP_TEXT" 10 55
 
   RESP=$?
