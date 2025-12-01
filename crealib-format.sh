@@ -99,7 +99,7 @@ mapfile -t DISKS < <(
 )
 
 if [[ ${#DISKS[@]} -eq 0 ]]; then
-  dialog --backtitle "CREALIB FORMAT v1.0" \
+  dialog --backtitle "$MSG_BACK_TITLE" \
          --msgbox "$MSG_NO_USB" 7 60
   clear
   exit 1
