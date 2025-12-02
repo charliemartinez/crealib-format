@@ -1,24 +1,28 @@
 #!/bin/bash
-# CREALIB FORMAT Ver. 1.0.0
-# Autor: Charlie Martínez <cmartinez@crealib.net>
-# Licencia: GPLv2 https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
+# ===============================================================================
+# Nombre:            CREALIB FORMAT Ver. 1.3.0
+# Autor:             Charlie Martinez® <cmartinez@quirinux.org>
+# Licencia:          https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
+# Utilidad:          Recuperación y formateo de discos
+# Distro:            Debian, Devuan y derivadas
+# ===============================================================================
+# Ejecutar con permisos de administrador
+# ===============================================================================
 
-# =========================================================
-# REQUERIR ROOT
-# =========================================================
+LOG_FILE="/var/log/crealib-format.log"
+AUTO_MODE=0
 
-if [[ "$EUID" -ne 0 ]]; then
-  clear
-  echo "ERROR: This program must be run as root."
-  echo "Use: sudo $0"
-  exit 1
-fi
+[[ "$1" == "--auto" ]] && AUTO_MODE=1
+
+log() {
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"
+}
 
 # =========================================================
 # IDIOMA
 # =========================================================
 
-SYS_LANG="${LANG:-$LC_ALL}"
+SYS_LANG="${LANG:-${LC_ALL:-en_US}}"
 
 case "$SYS_LANG" in
   es*|ES*) LANGMODE="ES" ;;
@@ -31,7 +35,55 @@ case "$SYS_LANG" in
 esac
 
 # =========================================================
-# MENSAJES
+# MENSAJES ROOT
+# =========================================================
+
+case "$LANGMODE" in
+ES)
+MSG_ROOT_ERROR="ERROR: Este programa debe ejecutarse como root."
+MSG_ROOT_USE="Use: sudo $0"
+;;
+PT)
+MSG_ROOT_ERROR="ERRO: Este programa deve ser executado como root."
+MSG_ROOT_USE="Use: sudo $0"
+;;
+GL)
+MSG_ROOT_ERROR="ERRO: Este programa debe executarse como root."
+MSG_ROOT_USE="Use: sudo $0"
+;;
+FR)
+MSG_ROOT_ERROR="ERREUR: Ce programme doit être exécuté en tant que root."
+MSG_ROOT_USE="Utilisez : sudo $0"
+;;
+IT)
+MSG_ROOT_ERROR="ERRORE: Questo programma deve essere eseguito come root."
+MSG_ROOT_USE="Usa: sudo $0"
+;;
+DE)
+MSG_ROOT_ERROR="FEHLER: Dieses Programm muss als Root ausgeführt werden."
+MSG_ROOT_USE="Verwendung: sudo $0"
+;;
+*)
+MSG_ROOT_ERROR="ERROR: This program must be run as root."
+MSG_ROOT_USE="Use: sudo $0"
+;;
+esac
+
+# =========================================================
+# REQUIRIR ROOT
+# =========================================================
+
+if [[ "$EUID" -ne 0 ]]; then
+  clear
+  echo "$MSG_ROOT_ERROR"
+  echo "$MSG_ROOT_USE"
+  exit 1
+fi
+
+log "Inicio del programa"
+
+# =========================================================
+# MENSAJES GENERALES
 # =========================================================
 
 case "$LANGMODE" in
@@ -40,102 +92,34 @@ MSG_MENU_TITLE="CREALIB FORMAT"
 MSG_MENU_TEXT="Seleccione el HDD USB:"
 MSG_CONFIRM_ZERO="¿CONFIRMAS el BORRADO TOTAL de:\n\n%s\n\nESTA ACCIÓN ES IRREVERSIBLE?"
 MSG_WORKING="Formateando..."
-MSG_DONE="BORRADO COMPLETO FINALIZADO:\n\n%s"
 MSG_NO_USB="No se detectaron discos HDD por USB."
 MSG_UMOUNT="Se desmontarán automáticamente las particiones activas."
 MSG_SMART_BEFORE="Estado SMART ANTES:"
 MSG_SMART_AFTER="Estado SMART DESPUÉS:"
 MSG_BADBLOCKS="¿Intentar recuperación de sectores (badblocks)?"
+MSG_BADBLOCKS_TITLE="badblocks"
 MSG_GOOD="DISCO APTO PARA USO"
 MSG_BAD="DISCO NO APTO"
-;;
-PT)
-MSG_MENU_TITLE="CREALIB FORMAT"
-MSG_MENU_TEXT="Selecione o HDD USB:"
-MSG_CONFIRM_ZERO="CONFIRMAR APAGAMENTO TOTAL DE:\n\n%s\n\nAÇÃO IRREVERSÍVEL?"
-MSG_WORKING="Formatando..."
-MSG_DONE="APAGAMENTO CONCLUÍDO:\n\n%s"
-MSG_NO_USB="Nenhum HDD USB detectado."
-MSG_UMOUNT="Partições ativas serão desmontadas."
-MSG_SMART_BEFORE="Estado SMART ANTES:"
-MSG_SMART_AFTER="Estado SMART DEPOIS:"
-MSG_BADBLOCKS="Tentar recuperação de setores?"
-MSG_GOOD="DISCO APTO"
-MSG_BAD="DISCO DEFEITUOSO"
-;;
-GL)
-MSG_MENU_TITLE="CREALIB FORMAT"
-MSG_MENU_TEXT="Seleccione o HDD USB:"
-MSG_CONFIRM_ZERO="CONFIRMA O BORRADO TOTAL DE:\n\n%s\n\nIRREVERSIBLE?"
-MSG_WORKING="Formatando..."
-MSG_DONE="BORRADO FINALIZADO:\n\n%s"
-MSG_NO_USB="Non se detectaron discos USB."
-MSG_UMOUNT="Desmontaranse particións activas."
-MSG_SMART_BEFORE="Estado SMART ANTES:"
-MSG_SMART_AFTER="Estado SMART DESPOIS:"
-MSG_BADBLOCKS="Intentar recuperación de sectores?"
-MSG_GOOD="DISCO APTO"
-MSG_BAD="DISCO DEFECTUOSO"
-;;
-FR)
-MSG_MENU_TITLE="CREALIB FORMAT"
-MSG_MENU_TEXT="Sélectionnez le disque USB:"
-MSG_CONFIRM_ZERO="CONFIRMER L'EFFACEMENT TOTAL DE:\n\n%s\n\nIRRÉVERSIBLE?"
-MSG_WORKING="Formatage..."
-MSG_DONE="EFFACEMENT TERMINÉ:\n\n%s"
-MSG_NO_USB="Aucun disque USB détecté."
-MSG_UMOUNT="Les partitions actives seront démontées."
-MSG_SMART_BEFORE="État SMART AVANT:"
-MSG_SMART_AFTER="État SMART APRÈS:"
-MSG_BADBLOCKS="Tenter la récupération?"
-MSG_GOOD="DISQUE UTILISABLE"
-MSG_BAD="DISQUE DÉFECTUEUX"
-;;
-IT)
-MSG_MENU_TITLE="CREALIB FORMAT"
-MSG_MENU_TEXT="Seleziona HDD USB:"
-MSG_CONFIRM_ZERO="CONFERMARE CANCELLAZIONE TOTALE DI:\n\n%s\n\nIRREVERSIBILE?"
-MSG_WORKING="Formattazione..."
-MSG_DONE="CANCELLAZIONE COMPLETATA:\n\n%s"
-MSG_NO_USB="Nessun disco USB rilevato."
-MSG_UMOUNT="Le partizioni verranno smontate."
-MSG_SMART_BEFORE="Stato SMART PRIMA:"
-MSG_SMART_AFTER="Stato SMART DOPO:"
-MSG_BADBLOCKS="Tentare recupero settori?"
-MSG_GOOD="DISCO IDONEO"
-MSG_BAD="DISCO DIFETTOSO"
-;;
-DE)
-MSG_MENU_TITLE="CREALIB FORMAT"
-MSG_MENU_TEXT="USB-Festplatte auswählen:"
-MSG_CONFIRM_ZERO="VOLLSTÄNDIGE LÖSCHUNG VON:\n\n%s\n\nBESTÄTIGEN?"
-MSG_WORKING="Formatierung..."
-MSG_DONE="LÖSCHUNG ABGESCHLOSSEN:\n\n%s"
-MSG_NO_USB="Keine USB-Festplatte erkannt."
-MSG_UMOUNT="Aktive Partitionen werden ausgehängt."
-MSG_SMART_BEFORE="SMART-Status VORHER:"
-MSG_SMART_AFTER="SMART-Status NACHHER:"
-MSG_BADBLOCKS="Sektorwiederherstellung starten?"
-MSG_GOOD="FESTPLATTE OK"
-MSG_BAD="FESTPLATTE DEFEKT"
+MSG_SYS_PROTECT="ERROR: Dispositivo del sistema protegido:"
 ;;
 *)
 MSG_MENU_TITLE="CREALIB FORMAT"
 MSG_MENU_TEXT="Select USB HDD:"
 MSG_CONFIRM_ZERO="CONFIRM TOTAL ERASE OF:\n\n%s\n\nIRREVERSIBLE?"
 MSG_WORKING="Formatting..."
-MSG_DONE="ERASE COMPLETED:\n\n%s"
 MSG_NO_USB="No USB HDD detected."
 MSG_UMOUNT="Active partitions will be unmounted."
 MSG_SMART_BEFORE="SMART BEFORE:"
 MSG_SMART_AFTER="SMART AFTER:"
 MSG_BADBLOCKS="Attempt sector recovery?"
+MSG_BADBLOCKS_TITLE="badblocks"
 MSG_GOOD="DISK HEALTHY"
 MSG_BAD="DISK FAILED"
+MSG_SYS_PROTECT="ERROR: System disk protected:"
 ;;
 esac
 
-MSG_BACK_TITLE="CREALIB FORMAT v1.2.1 - by Charlie Martinez® GPLv2"
+MSG_BACK_TITLE="CREALIB FORMAT v1.3.0 - by Charlie Martinez® GPLv2"
 
 # =========================================================
 # FUNCIONES
@@ -153,46 +137,67 @@ disk_ok() {
   smartctl -A "$1" | awk '
   /Pending/ {p=$10}
   /Uncorrectable/ {u=$10}
-  END {exit (p!=0 || u!=0)}'
+  END {p+=0; u+=0; exit (p!=0 || u!=0)}'
 }
 
 unmount_parts() {
   parts=$(lsblk -ln "$1" | awk '$7!="" {print $1}')
   if [[ -n "$parts" ]]; then
-    dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_UMOUNT" 8 60
-    clear
+    [[ $AUTO_MODE -eq 0 ]] && dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_UMOUNT" 8 60
     for p in $parts; do umount "/dev/$p" 2>/dev/null; done
   fi
 }
 
+is_system_disk() {
+  ROOT_DEV=$(findmnt -n -o SOURCE / | sed 's/[0-9]*$//')
+  [[ "$1" == "$ROOT_DEV" ]]
+}
+
 # =========================================================
-# DETECCIÓN HDD USB REAL
+# DETECCIÓN HDD USB
 # =========================================================
 
 mapfile -t DISKS < <(
   lsblk -ndo NAME,TRAN,TYPE,SIZE | awk '$2=="usb" && $3=="disk" && $4!="0B" {print "/dev/"$1}'
 )
 
-if [[ ${#DISKS[@]} -eq 0 ]]; then
-  dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_NO_USB" 7 60
+[[ ${#DISKS[@]} -eq 0 ]] && { echo "$MSG_NO_USB"; exit 1; }
+
+# =========================================================
+# SELECCIÓN
+# =========================================================
+
+if [[ $AUTO_MODE -eq 1 ]]; then
+  DISK_SELECTED="${DISKS[0]}"
+else
+  MENU_ITEMS=()
+  for d in "${DISKS[@]}"; do
+    s=$(lsblk -ndo SIZE "$d")
+    m=$(udevadm info --name="$d" | grep ID_MODEL= | cut -d= -f2)
+    MENU_ITEMS+=("$d" "$s ${m:-}")
+  done
+
+  DISK_SELECTED=$(dialog --backtitle "$MSG_BACK_TITLE" \
+    --title "$MSG_MENU_TITLE" \
+    --menu "$MSG_MENU_TEXT" 16 70 8 \
+    "${MENU_ITEMS[@]}" 3>&1 1>&2 2>&3)
+
   clear
+fi
+
+[[ -z "$DISK_SELECTED" ]] && exit 0
+
+# =========================================================
+# PROTECCIÓN DISCO SISTEMA
+# =========================================================
+
+if is_system_disk "$DISK_SELECTED"; then
+  echo "$MSG_SYS_PROTECT $DISK_SELECTED"
+  log "INTENTO DE BORRADO DE DISCO DEL SISTEMA: $DISK_SELECTED"
   exit 1
 fi
 
-MENU_ITEMS=()
-for d in "${DISKS[@]}"; do
-  s=$(lsblk -ndo SIZE "$d")
-  m=$(udevadm info --name="$d" | grep ID_MODEL= | cut -d= -f2)
-  MENU_ITEMS+=("$d" "$s ${m:-}")
-done
-
-DISK_SELECTED=$(dialog --backtitle "$MSG_BACK_TITLE" \
---title "$MSG_MENU_TITLE" \
---menu "$MSG_MENU_TEXT" 16 70 8 \
-"${MENU_ITEMS[@]}" 3>&1 1>&2 2>&3)
-
-clear
-[[ -z "$DISK_SELECTED" ]] && exit 0
+log "Disco seleccionado: $DISK_SELECTED"
 
 # =========================================================
 # DESMONTAJE
@@ -205,54 +210,61 @@ unmount_parts "$DISK_SELECTED"
 # =========================================================
 
 SB=$(get_smart "$DISK_SELECTED")
-dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_SMART_BEFORE\n\n$SB" 12 60
-clear
+[[ $AUTO_MODE -eq 0 ]] && dialog --msgbox "$MSG_SMART_BEFORE\n\n$SB" 12 60
+log "SMART BEFORE:\n$SB"
 
 # =========================================================
 # BADBLOCKS
 # =========================================================
 
-dialog --backtitle "$MSG_BACK_TITLE" --yesno "$MSG_BADBLOCKS" 10 60
-RESP=$?
-clear
+if [[ $AUTO_MODE -eq 0 ]]; then
+  dialog --yesno "$MSG_BADBLOCKS" 10 60
+  RESP=$?
+else
+  RESP=1
+fi
 
 if [[ $RESP -eq 0 ]]; then
-  ( badblocks -wsv "$DISK_SELECTED" ) | dialog --backtitle "$MSG_BACK_TITLE" --title "badblocks" --programbox 16 85
-  clear
+  log "Ejecución badblocks"
+  ( badblocks -wsv "$DISK_SELECTED" ) | \
+  dialog --title "$MSG_BADBLOCKS_TITLE" --programbox 16 85
 fi
 
 # =========================================================
 # CONFIRMACIÓN Y BORRADO
 # =========================================================
 
-CONFIRM=$(printf "$MSG_CONFIRM_ZERO" "$DISK_SELECTED")
-dialog --backtitle "$MSG_BACK_TITLE" --yesno "$CONFIRM" 12 70
-RESP=$?
-clear
-[[ $RESP -ne 0 ]] && exit 0
+if [[ $AUTO_MODE -eq 0 ]]; then
+  CONFIRM=$(printf "$MSG_CONFIRM_ZERO" "$DISK_SELECTED")
+  dialog --yesno "$CONFIRM" 12 70
+  [[ $? -ne 0 ]] && exit 0
+fi
 
-( dd if=/dev/zero of="$DISK_SELECTED" bs=4M status=progress conv=fsync ) | \
-dialog --backtitle "$MSG_BACK_TITLE" --title "$MSG_WORKING" --programbox 16 85
+log "Borrado iniciado en $DISK_SELECTED"
 
-clear
+dd if=/dev/zero of="$DISK_SELECTED" bs=4M status=progress conv=fsync
+
 sync
+log "Borrado finalizado"
 
 # =========================================================
 # SMART DESPUÉS
 # =========================================================
 
 SA=$(get_smart "$DISK_SELECTED")
-dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_SMART_AFTER\n\n$SA" 12 60
-clear
+log "SMART AFTER:\n$SA"
+[[ $AUTO_MODE -eq 0 ]] && dialog --msgbox "$MSG_SMART_AFTER\n\n$SA" 12 60
 
 # =========================================================
-# VEREDICTO FINAL
+# VEREDICTO
 # =========================================================
 
 if disk_ok "$DISK_SELECTED"; then
-  dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_GOOD" 8 45
+  log "VEREDICTO: OK"
+  [[ $AUTO_MODE -eq 0 ]] && dialog --msgbox "$MSG_GOOD" 8 45
 else
-  dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_BAD" 8 55
+  log "VEREDICTO: FALLIDO"
+  [[ $AUTO_MODE -eq 0 ]] && dialog --msgbox "$MSG_BAD" 8 55
 fi
 
 clear
