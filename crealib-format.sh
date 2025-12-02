@@ -3,7 +3,7 @@
 # Nombre:            CREALIB FORMAT Ver. 1.3.0
 # Autor:             Charlie Martinez® <cmartinez@quirinux.org>
 # Licencia:          https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
-# Utilidad:          Recuperación y formateo de discos
+# Utilidad:          Recuperación y formateo de discos conectados vía USB.
 # Distro:            Debian, Devuan y derivadas
 # ===============================================================================
 # Ejecutar con permisos de administrador
