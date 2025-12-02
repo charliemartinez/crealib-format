@@ -43,37 +43,37 @@ case "$LANGMODE" in
 ES)
 MSG_ROOT_ERROR="ERROR: Este programa debe ejecutarse como root."
 MSG_ROOT_USE="Use: sudo $0"
-MSG_WELCOME="CREALIB FORMAT\n\nUtilidad profesional para recuperación y borrado forense de discos USB.\n\n• Verificación SMART\n• Recuperación de sectores\n• Borrado total seguro\n\nATENCIÓN:\nSe guardará un registro completo en:\n$LOG_FILE"
+MSG_WELCOME="Utilidad profesional para recuperación y borrado forense de discos USB.\n\n• Verificación SMART\n• Recuperación de sectores\n• Borrado total seguro\n\nSe guardará un registro completo en:\n$LOG_FILE"
 ;;
 PT)
 MSG_ROOT_ERROR="ERRO: Este programa deve ser executado como root."
 MSG_ROOT_USE="Use: sudo $0"
-MSG_WELCOME="CREALIB FORMAT\n\nUtilitário profissional para recuperação e apagamento forense de discos USB.\n\n• Verificação SMART\n• Recuperação de setores\n• Apagamento total seguro\n\nATENÇÃO:\nSerá gerado um log em:\n$LOG_FILE"
+MSG_WELCOME="Utilitário profissional para recuperação e apagamento forense de discos USB.\n\n• Verificação SMART\n• Recuperação de setores\n• Apagamento total seguro\n\nSerá gerado um log em:\n$LOG_FILE"
 ;;
 GL)
 MSG_ROOT_ERROR="ERRO: Este programa debe executarse como root."
 MSG_ROOT_USE="Use: sudo $0"
-MSG_WELCOME="CREALIB FORMAT\n\nUtilidade profesional para recuperación e borrado forense de discos USB.\n\n• Verificación SMART\n• Recuperación de sectores\n• Borrado total seguro\n\nATENCIÓN:\nGardarase un rexistro en:\n$LOG_FILE"
+MSG_WELCOME="Utilidade profesional para recuperación e borrado forense de discos USB.\n\n• Verificación SMART\n• Recuperación de sectores\n• Borrado total seguro\n\nGardarase un rexistro en:\n$LOG_FILE"
 ;;
 FR)
 MSG_ROOT_ERROR="ERREUR: Ce programme doit être exécuté en tant que root."
 MSG_ROOT_USE="Utilisez : sudo $0"
-MSG_WELCOME="CREALIB FORMAT\n\nUtilitaire professionnel de récupération et d'effacement sécurisé de disques USB.\n\n• Vérification SMART\n• Récupération de secteurs\n• Effacement total sécurisé\n\nATTENTION:\nUn journal sera enregistré dans:\n$LOG_FILE"
+MSG_WELCOME="Utilitaire professionnel de récupération et d'effacement sécurisé de disques USB.\n\n• Vérification SMART\n• Récupération de secteurs\n• Effacement total sécurisé\n\nUn journal sera enregistré dans:\n$LOG_FILE"
 ;;
 IT)
 MSG_ROOT_ERROR="ERRORE: Questo programma deve essere eseguito come root."
 MSG_ROOT_USE="Usa: sudo $0"
-MSG_WELCOME="CREALIB FORMAT\n\nUtilità professionale per il recupero e la cancellazione forense di dischi USB.\n\n• Verifica SMART\n• Recupero settori\n• Cancellazione totale sicura\n\nATTENZIONE:\nVerrà salvato un log in:\n$LOG_FILE"
+MSG_WELCOME="Utilità professionale per il recupero e la cancellazione forense di dischi USB.\n\n• Verifica SMART\n• Recupero settori\n• Cancellazione totale sicura\n\nVerrà salvato un log in:\n$LOG_FILE"
 ;;
 DE)
 MSG_ROOT_ERROR="FEHLER: Dieses Programm muss als Root ausgeführt werden."
 MSG_ROOT_USE="Verwendung: sudo $0"
-MSG_WELCOME="CREALIB FORMAT\n\nProfessionelles Werkzeug zur Wiederherstellung und sicheren Löschung von USB-Laufwerken.\n\n• SMART-Überprüfung\n• Sektorwiederherstellung\n• Vollständige sichere Löschung\n\nACHTUNG:\nEin Protokoll wird gespeichert in:\n$LOG_FILE"
+MSG_WELCOME="Professionelles Werkzeug zur Wiederherstellung und sicheren Löschung von USB-Laufwerken.\n\n• SMART-Überprüfung\n• Sektorwiederherstellung\n• Vollständige sichere Löschung\n\nEin Protokoll wird gespeichert in:\n$LOG_FILE"
 ;;
 *)
 MSG_ROOT_ERROR="ERROR: This program must be run as root."
 MSG_ROOT_USE="Use: sudo $0"
-MSG_WELCOME="CREALIB FORMAT\n\nProfessional utility for recovery and forensic wipe of USB disks.\n\n• SMART verification\n• Sector recovery\n• Full secure erase\n\nWARNING:\nA complete log will be saved in:\n$LOG_FILE"
+MSG_WELCOME="Professional utility for recovery and forensic wipe of USB disks.\n\n• SMART verification\n• Sector recovery\n• Full secure erase\n\nA complete log will be saved in:\n$LOG_FILE"
 ;;
 esac
 
