@@ -1,18 +1,21 @@
 #!/bin/bash
 # ===============================================================================
-# Nombre:            CREALIB FORMAT Ver. 1.3.0
+# Nombre:            CREALIB FORMAT Ver. 1.3.1
 # Autor:             Charlie Martinez® <cmartinez@quirinux.org>
 # Licencia:          https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
 # Utilidad:          Recuperación y formateo de discos conectados vía USB.
-# Distro:            Debian, Devuan y derivadas
-# ===============================================================================
-# Ejecutar con permisos de administrador
+# Distro:            Debian, Devuan, Ubuntu y derivadas
 # ===============================================================================
 
 LOG_FILE="/var/log/crealib-format.log"
 AUTO_MODE=0
-
 [[ "$1" == "--auto" ]] && AUTO_MODE=1
+
+clean_exit() {
+  clear
+  stty sane 2>/dev/null
+}
+trap clean_exit EXIT INT TERM
 
 log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"
@@ -35,37 +38,44 @@ case "$SYS_LANG" in
 esac
 
 # =========================================================
-# MENSAJES ROOT
+# MENSAJES ROOT + LOG
 # =========================================================
 
 case "$LANGMODE" in
 ES)
 MSG_ROOT_ERROR="ERROR: Este programa debe ejecutarse como root."
 MSG_ROOT_USE="Use: sudo $0"
+MSG_LOG_INFO="Se dejará un registro del proceso en /var/log/crealib-format.log"
 ;;
 PT)
 MSG_ROOT_ERROR="ERRO: Este programa deve ser executado como root."
 MSG_ROOT_USE="Use: sudo $0"
+MSG_LOG_INFO="Um registro será salvo em /var/log/crealib-format.log"
 ;;
 GL)
 MSG_ROOT_ERROR="ERRO: Este programa debe executarse como root."
 MSG_ROOT_USE="Use: sudo $0"
+MSG_LOG_INFO="Deixarase un rexistro en /var/log/crealib-format.log"
 ;;
 FR)
 MSG_ROOT_ERROR="ERREUR: Ce programme doit être exécuté en tant que root."
 MSG_ROOT_USE="Utilisez : sudo $0"
+MSG_LOG_INFO="Un journal sera enregistré dans /var/log/crealib-format.log"
 ;;
 IT)
 MSG_ROOT_ERROR="ERRORE: Questo programma deve essere eseguito come root."
 MSG_ROOT_USE="Usa: sudo $0"
+MSG_LOG_INFO="Verrà creato un log in /var/log/crealib-format.log"
 ;;
 DE)
 MSG_ROOT_ERROR="FEHLER: Dieses Programm muss als Root ausgeführt werden."
 MSG_ROOT_USE="Verwendung: sudo $0"
+MSG_LOG_INFO="Ein Protokoll wird in /var/log/crealib-format.log gespeichert"
 ;;
 *)
 MSG_ROOT_ERROR="ERROR: This program must be run as root."
 MSG_ROOT_USE="Use: sudo $0"
+MSG_LOG_INFO="A log will be saved in /var/log/crealib-format.log"
 ;;
 esac
 
@@ -80,7 +90,29 @@ if [[ "$EUID" -ne 0 ]]; then
   exit 1
 fi
 
+# =========================================================
+# COMPROBACIÓN DE DEPENDENCIAS
+# =========================================================
+
+DEPENDENCIES=(dialog smartctl lsblk findmnt udevadm dd sync awk)
+MISSING_DEPS=()
+
+for dep in "${DEPENDENCIES[@]}"; do
+  command -v "$dep" >/dev/null 2>&1 || MISSING_DEPS+=("$dep")
+done
+
+if [[ ${#MISSING_DEPS[@]} -ne 0 ]]; then
+  clear
+  echo "ERROR: Missing required dependencies:"
+  for d in "${MISSING_DEPS[@]}"; do echo "  - $d"; done
+  echo
+  echo "Install with:"
+  echo "sudo apt install dialog smartmontools util-linux udev coreutils gawk"
+  exit 1
+fi
+
 log "Inicio del programa"
+log "$MSG_LOG_INFO"
 
 # =========================================================
 # MENSAJES GENERALES
@@ -119,7 +151,7 @@ MSG_SYS_PROTECT="ERROR: System disk protected:"
 ;;
 esac
 
-MSG_BACK_TITLE="CREALIB FORMAT v1.3.0 - by Charlie Martinez® GPLv2"
+MSG_BACK_TITLE="CREALIB FORMAT v1.3.1 - by Charlie Martinez® GPLv2"
 
 # =========================================================
 # FUNCIONES
@@ -161,7 +193,10 @@ mapfile -t DISKS < <(
   lsblk -ndo NAME,TRAN,TYPE,SIZE | awk '$2=="usb" && $3=="disk" && $4!="0B" {print "/dev/"$1}'
 )
 
-[[ ${#DISKS[@]} -eq 0 ]] && { echo "$MSG_NO_USB"; exit 1; }
+[[ ${#DISKS[@]} -eq 0 ]] && {
+  dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_NO_USB" 7 60
+  exit 1
+}
 
 # =========================================================
 # SELECCIÓN
@@ -181,8 +216,6 @@ else
     --title "$MSG_MENU_TITLE" \
     --menu "$MSG_MENU_TEXT" 16 70 8 \
     "${MENU_ITEMS[@]}" 3>&1 1>&2 2>&3)
-
-  clear
 fi
 
 [[ -z "$DISK_SELECTED" ]] && exit 0
@@ -192,8 +225,8 @@ fi
 # =========================================================
 
 if is_system_disk "$DISK_SELECTED"; then
-  echo "$MSG_SYS_PROTECT $DISK_SELECTED"
-  log "INTENTO DE BORRADO DE DISCO DEL SISTEMA: $DISK_SELECTED"
+  dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_SYS_PROTECT $DISK_SELECTED" 8 70
+  log "INTENTO DE BORRADO DEL SISTEMA: $DISK_SELECTED"
   exit 1
 fi
 
@@ -210,15 +243,15 @@ unmount_parts "$DISK_SELECTED"
 # =========================================================
 
 SB=$(get_smart "$DISK_SELECTED")
-[[ $AUTO_MODE -eq 0 ]] && dialog --msgbox "$MSG_SMART_BEFORE\n\n$SB" 12 60
 log "SMART BEFORE:\n$SB"
+[[ $AUTO_MODE -eq 0 ]] && dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_SMART_BEFORE\n\n$SB" 12 60
 
 # =========================================================
 # BADBLOCKS
 # =========================================================
 
 if [[ $AUTO_MODE -eq 0 ]]; then
-  dialog --yesno "$MSG_BADBLOCKS" 10 60
+  dialog --backtitle "$MSG_BACK_TITLE" --yesno "$MSG_BADBLOCKS" 10 60
   RESP=$?
 else
   RESP=1
@@ -227,7 +260,7 @@ fi
 if [[ $RESP -eq 0 ]]; then
   log "Ejecución badblocks"
   ( badblocks -wsv "$DISK_SELECTED" ) | \
-  dialog --title "$MSG_BADBLOCKS_TITLE" --programbox 16 85
+  dialog --backtitle "$MSG_BACK_TITLE" --title "$MSG_BADBLOCKS_TITLE" --programbox 16 85
 fi
 
 # =========================================================
@@ -236,14 +269,12 @@ fi
 
 if [[ $AUTO_MODE -eq 0 ]]; then
   CONFIRM=$(printf "$MSG_CONFIRM_ZERO" "$DISK_SELECTED")
-  dialog --yesno "$CONFIRM" 12 70
+  dialog --backtitle "$MSG_BACK_TITLE" --yesno "$CONFIRM" 12 70
   [[ $? -ne 0 ]] && exit 0
 fi
 
 log "Borrado iniciado en $DISK_SELECTED"
-
 dd if=/dev/zero of="$DISK_SELECTED" bs=4M status=progress conv=fsync
-
 sync
 log "Borrado finalizado"
 
@@ -253,7 +284,7 @@ log "Borrado finalizado"
 
 SA=$(get_smart "$DISK_SELECTED")
 log "SMART AFTER:\n$SA"
-[[ $AUTO_MODE -eq 0 ]] && dialog --msgbox "$MSG_SMART_AFTER\n\n$SA" 12 60
+[[ $AUTO_MODE -eq 0 ]] && dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_SMART_AFTER\n\n$SA" 12 60
 
 # =========================================================
 # VEREDICTO
@@ -261,11 +292,10 @@ log "SMART AFTER:\n$SA"
 
 if disk_ok "$DISK_SELECTED"; then
   log "VEREDICTO: OK"
-  [[ $AUTO_MODE -eq 0 ]] && dialog --msgbox "$MSG_GOOD" 8 45
+  [[ $AUTO_MODE -eq 0 ]] && dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_GOOD" 8 45
 else
   log "VEREDICTO: FALLIDO"
-  [[ $AUTO_MODE -eq 0 ]] && dialog --msgbox "$MSG_BAD" 8 55
+  [[ $AUTO_MODE -eq 0 ]] && dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_BAD" 8 55
 fi
 
-clear
 exit 0
