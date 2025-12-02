@@ -9,11 +9,14 @@
 
 LOG_FILE="/var/log/crealib-format.log"
 
+DIALOG_STARTED=0
+
 clean_exit() {
-  clear
-  stty sane 2>/dev/null
+  if [[ $DIALOG_STARTED -eq 1 ]]; then
+    clear
+    stty sane 2>/dev/null
+  fi
 }
-trap clean_exit EXIT INT TERM
 
 log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"
@@ -114,6 +117,9 @@ MSG_BACK_TITLE="CREALIB FORMAT v1.3.3 - by Charlie Martinez® GPLv2"
 # =========================================================
 # PANTALLA DE BIENVENIDA
 # =========================================================
+
+trap clean_exit EXIT INT TERM
+DIALOG_STARTED=1
 
 dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_WELCOME" 16 70
 
