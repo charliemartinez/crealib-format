@@ -4,6 +4,7 @@
 **Licencia / License:** GPLv2.0 <br>
 **Compatible OS:** Debian, Devuan y derivadas
 
+![Seleccionar disco](https://github.com/user-attachments/assets/372b9ee1-3326-42ea-ab0e-47c08cc05877)
 
 ---
 ![Contributors](https://img.shields.io/github/contributors/charliemartinez/crealib-format) ![Stars](https://img.shields.io/github/stars/charliemartinez/crealib-format?style=flat) ![Forks](https://img.shields.io/github/forks/charliemartinez/crealib-format?style=flat) ![Issues](https://img.shields.io/github/issues/charliemartinez/crealib-format) ![Last Commit](https://img.shields.io/github/last-commit/charliemartinez/crealib-format) ![Activity](https://img.shields.io/github/commit-activity/m/charliemartinez/crealib-format) ![Repo Size](https://img.shields.io/github/repo-size/charliemartinez/crealib-format?style=flat) ![Lenguaje](https://img.shields.io/badge/Lenguaje-Bash-blue)
@@ -19,7 +20,6 @@
 `Crealib Format` is a professional tool for **testing, recovering, secure erasing and basic certification of USB-connected HDD drives**, designed for **recycling environments, refurbishment labs and test benches**. It integrates SMART diagnostics, sector recovery with `badblocks`, and forensic wiping with `dd`, all through an interactive `dialog` interface.
 
 ---
-
 ## ✔️ Características / Features
 
 **ES:**
@@ -30,9 +30,12 @@
 - Desmontaje automático de particiones activas  
 - Clasificación automática del estado del disco (APTO / NO APTO)  
 - Interfaz 100% interactiva con `dialog`  
+- Protección activa contra el borrado del disco del sistema (`/`)  
+- Sistema de logs automático en `/var/log/crealib-format.log`  
 - Soporte multilenguaje (ES, EN, PT, GL, FR, IT, DE)  
 - Requiere ejecución como administrador (root)  
 - Programado íntegramente en Bash Scripting  
+- Compatible con entornos de laboratorio, SAT y diagnóstico técnico  
 
 **EN:**
 - Automatic detection of USB-connected HDDs  
@@ -41,10 +44,14 @@
 - Full forensic wipe using `dd`  
 - Automatic unmounting of active partitions  
 - Automatic disk health classification (GOOD / FAILED)  
-- 100% interactive interface with `dialog`  
+- 100% interactive interface using `dialog`  
+- Active protection against system disk (`/`) wiping  
+- Automatic logging system at `/var/log/crealib-format.log`  
 - Multilanguage support (ES, EN, PT, GL, FR, IT, DE)  
 - Requires administrator (root) execution  
 - Fully programmed in Bash scripting  
+- Suitable for lab, repair shop, and technical diagnostics environments  
+
 
 ---
 
