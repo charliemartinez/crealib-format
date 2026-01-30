@@ -1,14 +1,13 @@
 #!/bin/bash
-# ===============================================================================
-# Nombre:            CREALIB FORMAT Ver. 1.3.3
+# ----------------------------------------------------------------------
+# Nombre:            CREALIB FORMAT Ver. 1.3.4
 # Autor:             Charlie Martinez® <cmartinez@quirinux.org>
 # Licencia:          https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
-# Utilidad:          Recuperación y formateo de discos conectados vía USB.
+# Utilidad:          Recuperación y formateo de discos MECÁNICOS vía USB.
 # Distro:            Debian, Devuan, Ubuntu y derivadas
-# ===============================================================================
+# ----------------------------------------------------------------------
 
 LOG_FILE="/var/log/crealib-format.log"
-
 DIALOG_STARTED=0
 
 clean_exit() {
@@ -22,9 +21,9 @@ log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"
 }
 
-# =========================================================
-# IDIOMA
-# =========================================================
+# ----------------------------------------------------------------------
+# Idioma
+# ----------------------------------------------------------------------
 
 SYS_LANG="${LANG:-${LC_ALL:-en_US}}"
 
@@ -35,136 +34,236 @@ case "$SYS_LANG" in
   fr*|FR*) LANGMODE="FR" ;;
   it*|IT*) LANGMODE="IT" ;;
   de*|DE*) LANGMODE="DE" ;;
+  ru*|RU*) LANGMODE="RU" ;;
+  hu*|HU*) LANGMODE="HU" ;;
   *)       LANGMODE="EN" ;;
 esac
 
-# =========================================================
-# MENSAJES ROOT + BIENVENIDA
-# =========================================================
+# ----------------------------------------------------------------------
+# Traducciones
+# ----------------------------------------------------------------------
 
 case "$LANGMODE" in
 ES)
+BANNER_HDD="⚠️ SOLO DISCOS MECÁNICOS (HDD) ⚠️"
 MSG_ROOT_ERROR="ERROR: Este programa debe ejecutarse como root."
 MSG_ROOT_USE="Use: sudo $0"
-MSG_WELCOME="Utilidad profesional para recuperación y borrado forense de discos USB.\n\n• Verificación SMART\n• Recuperación de sectores\n• Borrado total seguro\n\nSe guardará un registro completo en:\n$LOG_FILE"
-;;
-PT)
-MSG_ROOT_ERROR="ERRO: Este programa deve ser executado como root."
-MSG_ROOT_USE="Use: sudo $0"
-MSG_WELCOME="Utilitário profissional para recuperação e apagamento forense de discos USB.\n\n• Verificação SMART\n• Recuperação de setores\n• Apagamento total seguro\n\nSerá gerado um log em:\n$LOG_FILE"
-;;
-GL)
-MSG_ROOT_ERROR="ERRO: Este programa debe executarse como root."
-MSG_ROOT_USE="Use: sudo $0"
-MSG_WELCOME="Utilidade profesional para recuperación e borrado forense de discos USB.\n\n• Verificación SMART\n• Recuperación de sectores\n• Borrado total seguro\n\nGardarase un rexistro en:\n$LOG_FILE"
-;;
-FR)
-MSG_ROOT_ERROR="ERREUR: Ce programme doit être exécuté en tant que root."
-MSG_ROOT_USE="Utilisez : sudo $0"
-MSG_WELCOME="Utilitaire professionnel de récupération et d'effacement sécurisé de disques USB.\n\n• Vérification SMART\n• Récupération de secteurs\n• Effacement total sécurisé\n\nUn journal sera enregistré dans:\n$LOG_FILE"
-;;
-IT)
-MSG_ROOT_ERROR="ERRORE: Questo programma deve essere eseguito come root."
-MSG_ROOT_USE="Usa: sudo $0"
-MSG_WELCOME="Utilità professionale per il recupero e la cancellazione forense di dischi USB.\n\n• Verifica SMART\n• Recupero settori\n• Cancellazione totale sicura\n\nVerrà salvato un log in:\n$LOG_FILE"
-;;
-DE)
-MSG_ROOT_ERROR="FEHLER: Dieses Programm muss als Root ausgeführt werden."
-MSG_ROOT_USE="Verwendung: sudo $0"
-MSG_WELCOME="Professionelles Werkzeug zur Wiederherstellung und sicheren Löschung von USB-Laufwerken.\n\n• SMART-Überprüfung\n• Sektorwiederherstellung\n• Vollständige sichere Löschung\n\nEin Protokoll wird gespeichert in:\n$LOG_FILE"
-;;
-*)
-MSG_ROOT_ERROR="ERROR: This program must be run as root."
-MSG_ROOT_USE="Use: sudo $0"
-MSG_WELCOME="Professional utility for recovery and forensic wipe of USB disks.\n\n• SMART verification\n• Sector recovery\n• Full secure erase\n\nA complete log will be saved in:\n$LOG_FILE"
-;;
-esac
-
-# =========================================================
-# REQUIRIR ROOT
-# =========================================================
-
-if [[ "$EUID" -ne 0 ]]; then
-  clear
-  echo "$MSG_ROOT_ERROR"
-  echo "$MSG_ROOT_USE"
-  exit 1
-fi
-
-# =========================================================
-# COMPROBACIÓN DE DEPENDENCIAS
-# =========================================================
-
-DEPENDENCIES=(dialog smartctl lsblk findmnt udevadm dd sync awk)
-MISSING_DEPS=()
-
-for dep in "${DEPENDENCIES[@]}"; do
-  command -v "$dep" >/dev/null 2>&1 || MISSING_DEPS+=("$dep")
-done
-
-if [[ ${#MISSING_DEPS[@]} -ne 0 ]]; then
-  clear
-  echo "ERROR: Missing required dependencies:"
-  for d in "${MISSING_DEPS[@]}"; do echo "  - $d"; done
-  echo
-  echo "Install with:"
-  echo "sudo apt install dialog smartmontools util-linux udev coreutils gawk"
-  exit 1
-fi
-
-MSG_BACK_TITLE="CREALIB FORMAT v1.3.3 - by Charlie Martinez® GPLv2"
-
-# =========================================================
-# PANTALLA DE BIENVENIDA
-# =========================================================
-
-trap clean_exit EXIT INT TERM
-DIALOG_STARTED=1
-
-dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_WELCOME" 16 70
-
-log "Inicio del programa"
-
-# =========================================================
-# MENSAJES GENERALES
-# =========================================================
-
-case "$LANGMODE" in
-ES)
-MSG_MENU_TITLE="CREALIB FORMAT"
+MSG_WELCOME="Utilidad profesional para recuperación y borrado forense de discos HDD USB.\n\n$BANNER_HDD\n\n• SMART\n• badblocks\n• Borrado total\n\nLog:\n$LOG_FILE"
+MSG_NOT_HDD="DISPOSITIVO NO ADMITIDO\n\nEste programa SOLO funciona con discos duros MECÁNICOS (HDD) conectados por USB.\n\nPendrives, SSD y memorias flash NO están permitidos."
 MSG_MENU_TEXT="Seleccione el HDD USB:"
 MSG_CONFIRM_ZERO="¿CONFIRMAS el BORRADO TOTAL de:\n\n%s\n\nESTA ACCIÓN ES IRREVERSIBLE?"
-MSG_WORKING="Formateando..."
-MSG_NO_USB="No se detectaron discos HDD por USB."
-MSG_UMOUNT="Se desmontarán automáticamente las particiones activas."
+MSG_NO_USB="No se detectaron discos HDD USB."
+MSG_UMOUNT="Se desmontarán las particiones activas."
 MSG_SMART_BEFORE="Estado SMART ANTES:"
 MSG_SMART_AFTER="Estado SMART DESPUÉS:"
 MSG_BADBLOCKS="¿Intentar recuperación de sectores (badblocks)?"
-MSG_BADBLOCKS_TITLE="badblocks"
 MSG_GOOD="DISCO APTO PARA USO"
 MSG_BAD="DISCO NO APTO"
-MSG_SYS_PROTECT="ERROR: Dispositivo del sistema protegido:"
+MSG_SYS_PROTECT="ERROR: Disco del sistema protegido:"
+;;
+PT)
+BANNER_HDD="⚠️ APENAS DISCOS MECÂNICOS (HDD) ⚠️"
+MSG_ROOT_ERROR="ERRO: Deve ser executado como root."
+MSG_ROOT_USE="Use: sudo $0"
+MSG_WELCOME="Utilitário profissional para HDD USB.\n\n$BANNER_HDD\n\nLog:\n$LOG_FILE"
+MSG_NOT_HDD="DISPOSITIVO NÃO SUPORTADO\n\nApenas discos HDD mecânicos via USB."
+MSG_MENU_TEXT="Selecione o HDD USB:"
+MSG_CONFIRM_ZERO="CONFIRMA A EXCLUSÃO TOTAL DE:\n\n%s\n\nIRREVERSÍVEL?"
+MSG_NO_USB="Nenhum HDD USB detectado."
+MSG_UMOUNT="As partições ativas serão desmontadas."
+MSG_SMART_BEFORE="SMART ANTES:"
+MSG_SMART_AFTER="SMART DEPOIS:"
+MSG_BADBLOCKS="Executar badblocks?"
+MSG_GOOD="DISCO OK"
+MSG_BAD="DISCO COM FALHAS"
+MSG_SYS_PROTECT="ERRO: Disco do sistema protegido:"
+;;
+GL)
+BANNER_HDD="⚠️ SÓ DISCOS MECÁNICOS (HDD) ⚠️"
+MSG_ROOT_ERROR="ERRO: Debe executarse como root."
+MSG_ROOT_USE="Use: sudo $0"
+MSG_WELCOME="Utilidade profesional para HDD USB.\n\n$BANNER_HDD"
+MSG_NOT_HDD="DISPOSITIVO NON ADMITIDO\n\nSó HDD mecánicos vía USB."
+MSG_MENU_TEXT="Seleccione o HDD USB:"
+MSG_CONFIRM_ZERO="CONFIRMAS O BORRADO TOTAL DE:\n\n%s\n\nIRREVERSIBLE?"
+MSG_NO_USB="Non se detectaron HDD USB."
+MSG_UMOUNT="Desmontaranse as particións activas."
+MSG_SMART_BEFORE="SMART ANTES:"
+MSG_SMART_AFTER="SMART DESPOIS:"
+MSG_BADBLOCKS="Executar badblocks?"
+MSG_GOOD="DISCO APTO"
+MSG_BAD="DISCO NON APTO"
+MSG_SYS_PROTECT="ERRO: Disco do sistema protexido:"
+;;
+FR)
+BANNER_HDD="⚠️ HDD MÉCANIQUES UNIQUEMENT ⚠️"
+MSG_ROOT_ERROR="ERREUR: Doit être exécuté en root."
+MSG_ROOT_USE="Utilisez: sudo $0"
+MSG_WELCOME="Outil professionnel pour HDD USB.\n\n$BANNER_HDD"
+MSG_NOT_HDD="PÉRIPHÉRIQUE NON SUPPORTÉ\n\nUniquement HDD mécaniques USB."
+MSG_MENU_TEXT="Sélectionnez le HDD USB:"
+MSG_CONFIRM_ZERO="CONFIRMEZ L'EFFACEMENT TOTAL DE:\n\n%s\n\nIRRÉVERSIBLE?"
+MSG_NO_USB="Aucun HDD USB détecté."
+MSG_UMOUNT="Les partitions actives seront démontées."
+MSG_SMART_BEFORE="SMART AVANT:"
+MSG_SMART_AFTER="SMART APRÈS:"
+MSG_BADBLOCKS="Exécuter badblocks?"
+MSG_GOOD="DISQUE OK"
+MSG_BAD="DISQUE DÉFECTUEUX"
+MSG_SYS_PROTECT="ERREUR: Disque système protégé:"
+;;
+IT)
+BANNER_HDD="⚠️ SOLO HDD MECCANICI ⚠️"
+MSG_ROOT_ERROR="ERRORE: Deve essere eseguito come root."
+MSG_ROOT_USE="Usa: sudo $0"
+MSG_WELCOME="Utility professionale per HDD USB.\n\n$BANNER_HDD"
+MSG_NOT_HDD="DISPOSITIVO NON SUPPORTATO\n\nSolo HDD meccanici USB."
+MSG_MENU_TEXT="Seleziona HDD USB:"
+MSG_CONFIRM_ZERO="CONFERMI LA CANCELLAZIONE TOTALE DI:\n\n%s\n\nIRREVERSIBILE?"
+MSG_NO_USB="Nessun HDD USB rilevato."
+MSG_UMOUNT="Le partizioni attive verranno smontate."
+MSG_SMART_BEFORE="SMART PRIMA:"
+MSG_SMART_AFTER="SMART DOPO:"
+MSG_BADBLOCKS="Eseguire badblocks?"
+MSG_GOOD="DISCO OK"
+MSG_BAD="DISCO DIFETTOSO"
+MSG_SYS_PROTECT="ERRORE: Disco di sistema protetto:"
+;;
+DE)
+BANNER_HDD="⚠️ NUR MECHANISCHE HDD ⚠️"
+MSG_ROOT_ERROR="FEHLER: Muss als root ausgeführt werden."
+MSG_ROOT_USE="Verwendung: sudo $0"
+MSG_WELCOME="Professionelles Tool für USB-HDD.\n\n$BANNER_HDD"
+MSG_NOT_HDD="NICHT UNTERSTÜTZTES GERÄT\n\nNur mechanische USB-HDDs."
+MSG_MENU_TEXT="USB-HDD auswählen:"
+MSG_CONFIRM_ZERO="BESTÄTIGEN SIE DAS LÖSCHEN VON:\n\n%s\n\nUNUMKEHRBAR?"
+MSG_NO_USB="Keine USB-HDD erkannt."
+MSG_UMOUNT="Aktive Partitionen werden ausgehängt."
+MSG_SMART_BEFORE="SMART VORHER:"
+MSG_SMART_AFTER="SMART NACHHER:"
+MSG_BADBLOCKS="badblocks ausführen?"
+MSG_GOOD="LAUFWERK OK"
+MSG_BAD="LAUFWERK FEHLERHAFT"
+MSG_SYS_PROTECT="FEHLER: Systemlaufwerk geschützt:"
+;;
+RU)
+BANNER_HDD="⚠️ ТОЛЬКО МЕХАНИЧЕСКИЕ HDD ⚠️"
+MSG_ROOT_ERROR="ОШИБКА: Требуются права root."
+MSG_ROOT_USE="Используйте: sudo $0"
+MSG_WELCOME="Профессиональная утилита для USB HDD.\n\n$BANNER_HDD"
+MSG_NOT_HDD="УСТРОЙСТВО НЕ ПОДДЕРЖИВАЕТСЯ\n\nДопускаются только механические HDD по USB."
+MSG_MENU_TEXT="Выберите USB HDD:"
+MSG_CONFIRM_ZERO="ПОДТВЕРДИТЕ ПОЛНОЕ УДАЛЕНИЕ:\n\n%s\n\nНЕОБРАТИМО?"
+MSG_NO_USB="USB HDD не обнаружены."
+MSG_UMOUNT="Активные разделы будут отключены."
+MSG_SMART_BEFORE="SMART ДО:"
+MSG_SMART_AFTER="SMART ПОСЛЕ:"
+MSG_BADBLOCKS="Запустить badblocks?"
+MSG_GOOD="ДИСК ИСПРАВЕН"
+MSG_BAD="ДИСК НЕИСПРАВЕН"
+MSG_SYS_PROTECT="ОШИБКА: Системный диск защищён:"
+;;
+HU)
+BANNER_HDD="⚠️ CSAK MECHANIKUS HDD ⚠️"
+MSG_ROOT_ERROR="HIBA: Root jogosultság szükséges."
+MSG_ROOT_USE="Használat: sudo $0"
+MSG_WELCOME="Professzionális USB HDD eszköz.\n\n$BANNER_HDD"
+MSG_NOT_HDD="NEM TÁMOGATOTT ESZKÖZ\n\nCsak mechanikus USB HDD engedélyezett."
+MSG_MENU_TEXT="USB HDD kiválasztása:"
+MSG_CONFIRM_ZERO="MEGERŐSÍTED A TELJES TÖRLÉST:\n\n%s\n\nVISSZAFORDÍTHATATLAN?"
+MSG_NO_USB="Nem található USB HDD."
+MSG_UMOUNT="Az aktív partíciók leválasztásra kerülnek."
+MSG_SMART_BEFORE="SMART ELŐTTE:"
+MSG_SMART_AFTER="SMART UTÁNA:"
+MSG_BADBLOCKS="badblocks futtatása?"
+MSG_GOOD="LEMEZ RENDBEN"
+MSG_BAD="LEMEZ HIBÁS"
+MSG_SYS_PROTECT="HIBA: Rendszerlemez védett:"
 ;;
 *)
-MSG_MENU_TITLE="CREALIB FORMAT"
+BANNER_HDD="⚠️ MECHANICAL HDD ONLY ⚠️"
+MSG_ROOT_ERROR="ERROR: Must be run as root."
+MSG_ROOT_USE="Use: sudo $0"
+MSG_WELCOME="Professional utility for USB HDD.\n\n$BANNER_HDD"
+MSG_NOT_HDD="UNSUPPORTED DEVICE\n\nOnly mechanical USB HDDs are allowed."
 MSG_MENU_TEXT="Select USB HDD:"
 MSG_CONFIRM_ZERO="CONFIRM TOTAL ERASE OF:\n\n%s\n\nIRREVERSIBLE?"
-MSG_WORKING="Formatting..."
 MSG_NO_USB="No USB HDD detected."
 MSG_UMOUNT="Active partitions will be unmounted."
 MSG_SMART_BEFORE="SMART BEFORE:"
 MSG_SMART_AFTER="SMART AFTER:"
-MSG_BADBLOCKS="Attempt sector recovery?"
-MSG_BADBLOCKS_TITLE="badblocks"
-MSG_GOOD="DISK HEALTHY"
+MSG_BADBLOCKS="Run badblocks?"
+MSG_GOOD="DISK OK"
 MSG_BAD="DISK FAILED"
 MSG_SYS_PROTECT="ERROR: System disk protected:"
 ;;
 esac
 
-# =========================================================
-# FUNCIONES
-# =========================================================
+# ----------------------------------------------------------------------
+# Root
+# ----------------------------------------------------------------------
+
+[[ $EUID -ne 0 ]] && { echo "$MSG_ROOT_ERROR"; echo "$MSG_ROOT_USE"; exit 1; }
+
+# ----------------------------------------------------------------------
+# Dependencias
+# ----------------------------------------------------------------------
+
+REQ=(dialog smartctl lsblk findmnt udevadm dd badblocks sync awk)
+for c in "${REQ[@]}"; do
+  command -v "$c" >/dev/null || { echo "Missing dependency: $c"; exit 1; }
+done
+
+MSG_BACK_TITLE="CREALIB FORMAT v1.3.4 — HDD USB ONLY"
+
+trap clean_exit EXIT INT TERM
+DIALOG_STARTED=1
+
+dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_WELCOME" 16 70
+log "Inicio"
+
+# ----------------------------------------------------------------------
+# Funciones
+# ----------------------------------------------------------------------
+
+is_valid_usb_hdd() {
+  local dev base rm rot flash size
+
+  base="$(basename "$1")"
+
+  # Solo USB
+  [[ "$(lsblk -dn -o TRAN "$1")" != "usb" ]] && return 1
+
+  # Solo rotacional
+  rot="$(cat /sys/block/$base/queue/rotational 2>/dev/null)"
+  [[ "$rot" != "1" ]] && return 1
+
+  # Descarta dispositivos removibles tipo pendrive
+  rm="$(cat /sys/block/$base/removable 2>/dev/null)"
+  [[ "$rm" == "1" ]] && return 1
+
+  # Detecta flash explícito vía udev
+  flash="$(udevadm info --query=property --name="$1" 2>/dev/null | grep -E 'ID_DRIVE_FLASH=1|ID_DRIVE_THUMB=1')"
+  [[ -n "$flash" ]] && return 1
+
+  # Tamaño mínimo (IDE antiguos)
+  size=$(blockdev --getsize64 "$1" 2>/dev/null)
+  [[ -z "$size" || "$size" -lt $((20*1024*1024*1024)) ]] && return 1
+
+  return 0
+}
+
+
+unmount_parts() {
+  lsblk -ln "$1" | awk '$7!=""{print $1}' | while read -r p; do
+    umount "/dev/$p" 2>/dev/null
+  done
+}
+
+is_system_disk() {
+  ROOT_DEV=$(findmnt -n -o SOURCE / | sed 's/[0-9]*$//')
+  [[ "$1" == "$ROOT_DEV" ]]
+}
 
 get_smart() {
   smartctl -A "$1" | awk '
@@ -178,123 +277,66 @@ disk_ok() {
   smartctl -A "$1" | awk '
   /Pending/ {p=$10}
   /Uncorrectable/ {u=$10}
-  END {p+=0; u+=0; exit (p!=0 || u!=0)}'
+  END {exit (p!=0 || u!=0)}'
 }
 
-unmount_parts() {
-  parts=$(lsblk -ln "$1" | awk '$7!="" {print $1}')
-  if [[ -n "$parts" ]]; then
-    dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_UMOUNT" 8 60
-    for p in $parts; do umount "/dev/$p" 2>/dev/null; done
-  fi
-}
-
-is_system_disk() {
-  ROOT_DEV=$(findmnt -n -o SOURCE / | sed 's/[0-9]*$//')
-  [[ "$1" == "$ROOT_DEV" ]]
-}
-
-# =========================================================
-# DETECCIÓN HDD USB
-# =========================================================
+# ----------------------------------------------------------------------
+# Detección HDD USB mecánicos
+# ----------------------------------------------------------------------
 
 mapfile -t DISKS < <(
-  lsblk -ndo NAME,TRAN,TYPE,SIZE | awk '$2=="usb" && $3=="disk" && $4!="0B" {print "/dev/"$1}'
+  lsblk -ndo NAME,TYPE | awk '$2=="disk"{print "/dev/"$1}'
 )
 
-if [[ ${#DISKS[@]} -eq 0 ]]; then
-  dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_NO_USB" 7 60
-  exit 1
-fi
-
-# =========================================================
-# SELECCIÓN
-# =========================================================
-
-MENU_ITEMS=()
+VALID=()
 for d in "${DISKS[@]}"; do
-  s=$(lsblk -ndo SIZE "$d")
-  m=$(udevadm info --name="$d" | grep ID_MODEL= | cut -d= -f2)
-  MENU_ITEMS+=("$d" "$s ${m:-}")
+  is_valid_usb_hdd "$d" && VALID+=("$d")
 done
 
-DISK_SELECTED=$(dialog --backtitle "$MSG_BACK_TITLE" \
-  --title "$MSG_MENU_TITLE" \
-  --menu "$MSG_MENU_TEXT" 16 70 8 \
-  "${MENU_ITEMS[@]}" 3>&1 1>&2 2>&3)
 
-[[ -z "$DISK_SELECTED" ]] && exit 0
+[[ ${#VALID[@]} -eq 0 ]] && dialog --msgbox "$MSG_NOT_HDD" 12 70 && exit 1
 
-# =========================================================
-# PROTECCIÓN DISCO SISTEMA
-# =========================================================
+# ----------------------------------------------------------------------
+# Menú
+# ----------------------------------------------------------------------
 
-if is_system_disk "$DISK_SELECTED"; then
-  dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_SYS_PROTECT $DISK_SELECTED" 8 70
-  log "INTENTO DE BORRADO DEL SISTEMA: $DISK_SELECTED"
+MENU=()
+for d in "${VALID[@]}"; do
+  MENU+=("$d" "$(lsblk -ndo SIZE "$d")")
+done
+
+DISK=$(dialog --menu "$MSG_MENU_TEXT" 16 60 8 "${MENU[@]}" 3>&1 1>&2 2>&3)
+[[ -z "$DISK" ]] && exit 0
+
+# ----------------------------------------------------------------------
+# Protección sistema
+# ----------------------------------------------------------------------
+
+if is_system_disk "$DISK"; then
+  dialog --msgbox "$MSG_SYS_PROTECT $DISK" 8 60
   exit 1
 fi
 
-log "Disco seleccionado: $DISK_SELECTED"
+# ----------------------------------------------------------------------
+# Flujo
+# ----------------------------------------------------------------------
 
-# =========================================================
-# DESMONTAJE
-# =========================================================
+unmount_parts "$DISK"
 
-unmount_parts "$DISK_SELECTED"
+SB=$(get_smart "$DISK")
+dialog --msgbox "$MSG_SMART_BEFORE\n\n$SB" 12 60
 
-# =========================================================
-# SMART ANTES
-# =========================================================
+dialog --yesno "$MSG_BADBLOCKS" 10 60 && \
+( badblocks -wsv "$DISK" ) | dialog --programbox 16 85
 
-SB=$(get_smart "$DISK_SELECTED")
-log "SMART BEFORE:\n$SB"
-dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_SMART_BEFORE\n\n$SB" 12 60
+dialog --yesno "$(printf "$MSG_CONFIRM_ZERO" "$DISK")" 12 70 || exit 0
 
-# =========================================================
-# BADBLOCKS
-# =========================================================
-
-dialog --backtitle "$MSG_BACK_TITLE" --yesno "$MSG_BADBLOCKS" 10 60
-RESP=$?
-
-if [[ $RESP -eq 0 ]]; then
-  log "Ejecución badblocks"
-  ( badblocks -wsv "$DISK_SELECTED" ) | \
-  dialog --backtitle "$MSG_BACK_TITLE" --title "$MSG_BADBLOCKS_TITLE" --programbox 16 85
-fi
-
-# =========================================================
-# CONFIRMACIÓN Y BORRADO
-# =========================================================
-
-CONFIRM=$(printf "$MSG_CONFIRM_ZERO" "$DISK_SELECTED")
-dialog --backtitle "$MSG_BACK_TITLE" --yesno "$CONFIRM" 12 70
-[[ $? -ne 0 ]] && exit 0
-
-log "Borrado iniciado en $DISK_SELECTED"
-dd if=/dev/zero of="$DISK_SELECTED" bs=4M status=progress conv=fsync
+dd if=/dev/zero of="$DISK" bs=4M status=progress conv=fsync
 sync
-log "Borrado finalizado"
 
-# =========================================================
-# SMART DESPUÉS
-# =========================================================
+SA=$(get_smart "$DISK")
+dialog --msgbox "$MSG_SMART_AFTER\n\n$SA" 12 60
 
-SA=$(get_smart "$DISK_SELECTED")
-log "SMART AFTER:\n$SA"
-dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_SMART_AFTER\n\n$SA" 12 60
-
-# =========================================================
-# VEREDICTO
-# =========================================================
-
-if disk_ok "$DISK_SELECTED"; then
-  log "VEREDICTO: OK"
-  dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_GOOD" 8 45
-else
-  log "VEREDICTO: FALLIDO"
-  dialog --backtitle "$MSG_BACK_TITLE" --msgbox "$MSG_BAD" 8 55
-fi
+disk_ok "$DISK" && dialog --msgbox "$MSG_GOOD" 8 40 || dialog --msgbox "$MSG_BAD" 8 50
 
 exit 0
