@@ -4,7 +4,8 @@
 **Licencia / License:** GPLv2.0 <br>
 **Compatible OS:** Debian, Devuan y derivadas
 
-![Seleccionar disco](https://github.com/user-attachments/assets/372b9ee1-3326-42ea-ab0e-47c08cc05877)
+![badblocks](https://github.com/user-attachments/assets/386e0407-d6dd-452c-a1ae-82d04185a435)
+
 
 ---
 ![Contributors](https://img.shields.io/github/contributors/charliemartinez/crealib-format) ![Stars](https://img.shields.io/github/stars/charliemartinez/crealib-format?style=flat) ![Forks](https://img.shields.io/github/forks/charliemartinez/crealib-format?style=flat) ![Issues](https://img.shields.io/github/issues/charliemartinez/crealib-format) ![Last Commit](https://img.shields.io/github/last-commit/charliemartinez/crealib-format) ![Activity](https://img.shields.io/github/commit-activity/m/charliemartinez/crealib-format) ![Repo Size](https://img.shields.io/github/repo-size/charliemartinez/crealib-format?style=flat) ![Lenguaje](https://img.shields.io/badge/Lenguaje-Bash-blue)
